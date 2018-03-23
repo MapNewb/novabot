@@ -129,7 +129,7 @@
                     <target>1.8</target>
                     <archive>
                         <manifest>
-                            <mainClass>com.github.novskey.novabot.core.NovaBot>/mainClass>
+                            <mainClass>com.github.novskey.novabot.core.NovaBot></mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
