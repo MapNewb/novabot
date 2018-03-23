@@ -178,4 +178,11 @@ Run novabot from a terminal with:
 `java -jar novabot.jar`
 
 ## <a name="quick-start"></a> Quick Start Guide
-TBD
+
+Building from source:
+
+Install Maven. 
+
+mvn package
+
+Jar is available on target/
