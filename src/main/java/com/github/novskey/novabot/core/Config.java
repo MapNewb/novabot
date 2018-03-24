@@ -51,7 +51,7 @@ public class Config {
     private TreeMap<String, String> presets = new TreeMap<>();
     private ArrayList<Integer> raidBosses = new ArrayList<>(Arrays.asList(2, 5, 8, 11, 28, 31, 34, 38, 62, 65, 68, 71, 73, 76, 82, 91, 94, 105, 123, 129, 131, 137, 139, 143, 144, 145, 146, 150, 243, 244, 245, 248, 249, 302, 303, 359));
     private ArrayList<Integer> blacklist = new ArrayList<>();
-    private ArrayList<String> notificationTokens = new ArrayList<>();
+    private ArrayList<String> discordNotificationTokens = new ArrayList<>();
     private HashSet<ScannerDb> scannerDbs = new HashSet<ScannerDb>();
     private boolean logging = false;
     private boolean stats = true;
@@ -63,7 +63,8 @@ public class Config {
     private boolean raidOrganisationEnabled = true;
     private boolean useGoogleTimeZones = false;
     private boolean allowAllLocation = true;
-    private String token = null;
+    private String discordToken = null;
+    private String slackToken = null;
     private ZoneId timeZone = ZoneId.systemDefault();
     private Integer minSecondsLeft = 60;
     private String footerText = null;
@@ -227,16 +228,23 @@ public class Config {
     private void loadBaseConfig(String configName, Ini configIni, String gkeys, String formatting, String raidChannelsFile, String supporterLevels, String pokeChannelsFile, String presetsFile) {
         Ini.Section config = configIni.get("config");
 
-        token = config.get("token", token);
+        discordToken = config.get("discordtoken", discordToken);
 
-        if (token == null) {
-            log.error(String.format("Couldn't find token in %s. novabot can't run without a bot token.", configName));
-            System.exit(1);
+        if (discordToken == null) {
+            log.error(String.format("Couldn't find discordtoken in %s. novabot can't run on discord without a bot token.", configName));
+            // System.exit(1);
         }
 
-        String notificationTokensStr = config.get("notificationTokens","[]");
+        slackToken = config.get("slacktoken", slackToken);
 
-        notificationTokens = UtilityFunctions.parseList(notificationTokensStr);
+        if (slackToken == null) {
+            log.error(String.format("Couldn't find slacktoken in %s. novabot can't run on Slack without a bot token.", configName));
+            // System.exit(1);
+        }
+
+        String discordNotificationTokensStr = config.get("discordNotificationTokens","[]");
+
+        discordNotificationTokens = UtilityFunctions.parseList(discordNotificationTokensStr);
 
         String blacklistStr = config.get("blacklist", "[]");
 

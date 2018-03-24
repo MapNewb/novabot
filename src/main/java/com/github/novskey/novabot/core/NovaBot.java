@@ -1058,90 +1058,93 @@ public class NovaBot {
 
         Game pokemonGo = Game.of(Game.GameType.DEFAULT, "Pokemon Go");
         try {
-            novabotLog.info("Logging in main bot");
-            jda = new JDABuilder(AccountType.BOT)
-                    .setAutoReconnect(true)
-                    .setGame(pokemonGo)
-                    .setToken(getConfig().getToken())
-                    .buildBlocking();
+            novabotLog.info("Logging in main discord bot");
+            if(getConfig().getDiscordToken()!=null && !getConfig().getDiscordToken().isEmpty()) {
+                jda = new JDABuilder(AccountType.BOT)
+                        .setAutoReconnect(true)
+                        .setGame(pokemonGo)
+                        .setToken(getConfig().getDiscordToken())
+                        .buildBlocking();
+            
 
-            jda.addEventListener(new MessageListener(this,true));
+                jda.addEventListener(new MessageListener(this,true));
 
-            notificationBots.put(getConfig().getToken(),jda);
-            botTokens.add(getConfig().getToken());
-            if(!botTokenUses.containsKey(getConfig().getToken())){
-                botTokenUses.put(getConfig().getToken(), 0);
-            }
-            if (getConfig().getNotificationTokens().size() > 0){
-                int botNum = 1;
-                for (String token : getConfig().getNotificationTokens()) {
-                    if (!token.equals(getConfig().getToken())) {
-                        novabotLog.info("Logging in notification bot #" + botNum);
-                        notificationBots.put(token, (new JDABuilder(AccountType.BOT)
-                                .setAutoReconnect(true)
-                                .setGame(pokemonGo)
-                                .setToken(token)
-                                .addEventListener(new MessageListener(this, false))
-                                .buildBlocking()));
-                        botNum++;
+                notificationBots.put(getConfig().getDiscordToken(),jda);
+                botTokens.add(getConfig().getDiscordToken());
+                if(!botTokenUses.containsKey(getConfig().getDiscordToken())){
+                    botTokenUses.put(getConfig().getDiscordToken(), 0);
+                }
+                if (getConfig().getDiscordNotificationTokens().size() > 0){
+                    int botNum = 1;
+                    for (String token : getConfig().getDiscordNotificationTokens()) {
+                        if (!token.equals(getConfig().getDiscordToken())) {
+                            novabotLog.info("Logging in notification bot #" + botNum);
+                            notificationBots.put(token, (new JDABuilder(AccountType.BOT)
+                                    .setAutoReconnect(true)
+                                    .setGame(pokemonGo)
+                                    .setToken(token)
+                                    .addEventListener(new MessageListener(this, false))
+                                    .buildBlocking()));
+                            botNum++;
+                        }
+                        botTokens.add(token);
+                        if(!botTokenUses.containsKey(token)){
+                            botTokenUses.put(token, 0);
+                        }
                     }
-                    botTokens.add(token);
-                    if(!botTokenUses.containsKey(token)){
-                        botTokenUses.put(token, 0);
+                }
+
+                ArrayList<String> toRemove = new ArrayList<>();
+                for (String botToken : botTokenUses.keySet()) {
+                    if (!notificationBots.containsKey(botToken)){
+                        novabotLog.info(String.format("Bot token %s from the DB no longer exists in config file, queuing for removal", botToken));
+                        toRemove.add(botToken);
                     }
                 }
-            }
 
-            ArrayList<String> toRemove = new ArrayList<>();
-            for (String botToken : botTokenUses.keySet()) {
-                if (!notificationBots.containsKey(botToken)){
-                    novabotLog.info(String.format("Bot token %s from the DB no longer exists in config file, queuing for removal", botToken));
-                    toRemove.add(botToken);
-                }
-            }
-
-            botTokens.removeAll(toRemove);
-            toRemove.forEach(botTokenUses::remove);
-            if(toRemove.size() > 0) {
-                dataManager.clearTokens(toRemove);
-            }
-
-            novabotLog.info("Loaded notification bots: " + notificationBots);
-
-            for (Guild guild1 : jda.getGuilds()) {
-                novabotLog.info("Connected to guild: " + guild1.getName());
-                if (config.getMainGuild() == null && guild == null) {
-                    guild = guild1;
+                botTokens.removeAll(toRemove);
+                toRemove.forEach(botTokenUses::remove);
+                if(toRemove.size() > 0) {
+                    dataManager.clearTokens(toRemove);
                 }
 
-                loadEmotes(guild1, jda);
-            }
+                novabotLog.info("Loaded notification bots: " + notificationBots);
 
-            if (config.getMainGuild() != null){
-                guild = jda.getGuildById(config.getMainGuild());
-            }
-
-            if (guild == null){
-                novabotLog.error("No main guild was set, make sure your bot is connected to at least one discord server.");
-                System.exit(0);
-            }
-
-            novabotLog.info(String.format("Set %s as main guild", guild.getName()));
-
-            if (getConfig().getCommandChannelId() != null) {
-                TextChannel channel = guild.getTextChannelById(getConfig().getCommandChannelId());
-                if (channel != null) {
-                    if (getConfig().showStartupMessage()) {
-                        channel.sendMessage(getLocalString("StartUpMessage")).queue();
+                for (Guild guild1 : jda.getGuilds()) {
+                    novabotLog.info("Connected to guild: " + guild1.getName());
+                    if (config.getMainGuild() == null && guild == null) {
+                        guild = guild1;
                     }
-                } else {
-                    novabotLog.info(String.format("couldn't find command channel by id from config: %s", getConfig().getCommandChannelId()));
+
+                    loadEmotes(guild1, jda);
                 }
+
+                if (config.getMainGuild() != null){
+                    guild = jda.getGuildById(config.getMainGuild());
+                }
+
+                if (guild == null){
+                    novabotLog.error("No main guild was set, make sure your bot is connected to at least one discord server.");
+                    System.exit(0);
+                }
+
+                novabotLog.info(String.format("Set %s as main guild", guild.getName()));
+
+                if (getConfig().getCommandChannelId() != null) {
+                    TextChannel channel = guild.getTextChannelById(getConfig().getCommandChannelId());
+                    if (channel != null) {
+                        if (getConfig().showStartupMessage()) {
+                            channel.sendMessage(getLocalString("StartUpMessage")).queue();
+                        }
+                    } else {
+                        novabotLog.info(String.format("couldn't find command channel by id from config: %s", getConfig().getCommandChannelId()));
+                    }
+                }
+
+                guild.getMember(jda.getSelfUser()).getRoles().forEach(System.out::println);
+
+                guild.getInvites().queue(success -> invites.addAll(success));
             }
-
-            guild.getMember(jda.getSelfUser()).getRoles().forEach(System.out::println);
-
-            guild.getInvites().queue(success -> invites.addAll(success));
 
             if (getConfig().loggingEnabled()) {
                 roleLog = jda.getTextChannelById(getConfig().getRoleLogId());
